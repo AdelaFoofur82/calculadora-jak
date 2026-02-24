@@ -1,5 +1,9 @@
 # Calculadora JAK · Simulador ARESI
 
+![JavaScript](https://img.shields.io/badge/JavaScript-ES6%2B-F7DF1E?logo=javascript&logoColor=000)
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=fff)
+![Vue](https://img.shields.io/badge/Vue-3-4FC08D?logo=vuedotjs&logoColor=fff)
+
 Aplicación web estática para simular la devolución de una ARESI, mes a mes, combinando:
 
 - devolución económica (€)
