@@ -46,7 +46,7 @@ La calculadora está publicada en GitHub Pages y se puede usar directamente aqu�
 ## Cómo usar la calculadora
 
 1. Introduce el dinero prestado (€).
-2. Define la entrega mensual (€).
+2. Define la entrega mensual (€). Aquí te calcula pensando en lo que puedes aportar cada mes, incluyendo tanto la devolución de deuda como la aportación como ahorro.
 3. Añade puntos iniciales (si los hay).
 4. Ajusta pagos mensuales en la tabla si necesitas escenarios no lineales.
 5. Copia el enlace para compartir exactamente la misma simulación.
@@ -57,19 +57,3 @@ La calculadora está publicada en GitHub Pages y se puede usar directamente aqu�
   - `calculadora_jak_estado_v1`
 - El enlace compartible usa un payload codificado (base64 URL-safe) en `?d=`.
 - Si se abre con `?d=reset`, se limpia el estado guardado.
-
-## Publicación en GitHub
-
-Este repositorio no requiere build ni dependencias.
-
-Pasos típicos:
-
-1. Subir archivos a GitHub.
-2. Activar GitHub Pages (Settings → Pages).
-3. Seleccionar rama `main` y carpeta `/root`.
-
-Con eso, la app queda publicada como sitio estático.
-
-## Licencia
-
-Consulta el archivo `LICENSE` del repositorio si existe o añade la licencia que quieras usar.
