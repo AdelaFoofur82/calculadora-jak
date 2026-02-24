@@ -37,20 +37,11 @@ calculadora-jak/
 └─ README.md
 ```
 
-## Uso local
+## Uso
 
-Como es una app estática, puedes abrir `index.html` directamente en el navegador.
+La calculadora está publicada en GitHub Pages y se puede usar directamente aquí:
 
-Opcionalmente, para evitar limitaciones del navegador en algunos entornos, puedes servirlo con un servidor estático:
-
-```bash
-# Python 3
-python -m http.server 8080
-```
-
-Y abrir:
-
-- `http://localhost:8080`
+- https://adelafoofur82.github.io/calculadora-jak/
 
 ## Cómo usar la calculadora
 
