@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proyecto JAK - Simulador ARESI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body {
+            background: #e9f0f7;
+            font-family: 'Segoe UI', Roboto;
+        }
+
+        .card-custom {
+            border-radius: 2rem;
+            border: none;
+            box-shadow: 0 12px 28px -10px rgba(0, 50, 80, 0.2);
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .table {
+            font-size: 0.7em;
+        }
+
+        .table td {
+            text-align: right;
+        }
+
+        .table-wrapper {
+            border-radius: 1.2rem;
+            border: 1px solid #c9d9eb;
+            background: white;
+        }
+
+        .table thead {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+
+        .table thead tr:first-child {
+            background: #c1d6f0;
+            color: #012039;
+            font-weight: 600;
+        }
+
+        .table thead tr:last-child th {
+            background: #e2ecfc;
+            font-weight: 500;
+        }
+
+        .table thead {
+            border-bottom: 3px solid #2d5980;
+            text-align: center !important;
+        }
+
+        .tabla-input {
+            width: 80px;
+            border-radius: 30px;
+            border: 1px solid #8fb3da;
+            padding: 0.3rem 0.9rem;
+            background: #f0f087;
+            text-align: right;
+        }
+
+        .tabla-input:focus {
+            border-color: #0b5e9e;
+            box-shadow: 0 0 0 3px rgba(11, 94, 158, 0.2);
+            outline: none;
+            background: #d2d279;
+        }
+
+        .punto-star {
+            color: #d4942b;
+            text-shadow: 0 0 2px #ffbf4b;
+        }
+
+        .btn-wide {
+            padding-left: 2rem;
+            padding-right: 2rem;
+        }
+
+        .sweet-badge {
+            background: #133b5c;
+            color: white;
+            padding: 0.4rem 2rem;
+            border-radius: 40px;
+            font-size: 1.1rem;
+        }
+
+        .sweet-section {
+            border-radius: 1.4rem;
+            border: 1px solid #c9d9eb;
+            background: #f7fbff;
+        }
+
+        .sweet-metric {
+            border-radius: 1rem;
+            padding: 0.9rem 1rem;
+            border: 1px solid transparent;
+        }
+
+        .sweet-metric-label {
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-weight: 700;
+        }
+
+        .sweet-edit-input {
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-align: center;
+            border-radius: 0.7rem;
+        }
+
+        .sweet-metric-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .sweet-devolucion {
+            background: #b8d1f0;
+            border-color: #99b8da;
+            color: #012039;
+        }
+
+        .sweet-ahorro {
+            background: #dae8fc;
+            border-color: #b7cde9;
+            color: #0c294b;
+        }
+
+        .sweet-tiempo {
+            background: #e2ecfc;
+            border-color: #c2d5ef;
+            color: #12395f;
+        }
+
+        .valor-calculado {
+            background-color: #e7ecf2;
+        }
+
+        .celda-editable {
+            background-color: #ffffff;
+        }
+
+        .valor-negativo-dinero {
+            background-color: #e8dcf6 !important;
+            color: #4a2a70;
+            font-weight: 600;
+        }
+
+        .valor-negativo-puntos {
+            background-color: #ebbda1 !important;
+            color: #8a4b00;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body class="p-3 p-xl-4">
+    <div id="app" class="container-xl py-3">
+        <div v-if="loading" class="d-flex flex-column align-items-center justify-content-center" style="height: 80vh;">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <div class="mt-3 text-secondary">Cargando calculadora...</div>
+        </div>
+        <div v-else>
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="bg-primary p-3 rounded-5 shadow-lg">
+                    <i class="bi bi-cash-coin text-white fs-1"></i>
+                </div>
+                <div>
+                    <h1 class="display-6 fw-semibold" style="color: #0c294b;">Proyecto JAK<span style="color: #1f5691;">
+                            Simulador ARESI</span></h1>
+                    <p class="text-secondary">Calculadora para poder gestionar tu devolución de una ARESI y los puntos
+                        necesarios</p>
+                    <a href="?d=reset" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset calculadora
+                    </a>
+                </div>
+            </div>
+
+            <div class="card card-custom mb-4">
+                <div class="card-body p-4">
+                    <div class="row g-4 align-items-end">
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium fs-5" for="capitalTotal">💰 Dinero prestado (€)</label>
+                            <input type="number" id="capitalTotal" class="form-control form-control-lg"
+                                v-model.number="capitalTotal" @input="programarRecalculoFormulario" min="100"
+                                step="500">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium fs-5" for="pagoMensualFijo">💵 Entrega mensual
+                                (€)</label>
+                            <input type="number" id="pagoMensualFijo" class="form-control form-control-lg"
+                                v-model.number="entregaMensualTotal" @input="programarRecalculoFormulario" min="10"
+                                step="50">
+                        </div>
+                    </div>
+                    <div class="row g-4 mt-1 align-items-end">
+                        <div class="col-md-6 align-self-start">
+                            <label class="form-label fw-medium" for="puntosInicialesExtra">⭐ Puntos iniciales (ahorro o
+                                donados)</label>
+                            <input type="number" id="puntosInicialesExtra" class="form-control"
+                                v-model.number="puntosInicialesExtra" @input="programarRecalculoFormulario" min="0"
+                                step="1">
+                            <small><i>{{ textoAporteInicial }}</i></small>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="sweet-metric sweet-tiempo">
+                                <div class="sweet-metric-label">Tiempo estimado de devolución</div>
+                                <div class="sweet-metric-value" id="sweetMesesValor">{{ sweetState.mesesTexto }} </div>
+                                <div><i>{{ mesesPrestamo }} meses para devolver el préstamo económico
+                                        <br /> {{ mesesAhorroPuntos }} meses para generar el ahorro necesario para
+                                        devolver
+                                        los puntos</i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-custom mb-4">
+                <div class="card-body p-4">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-9">
+                            <label class="form-label fw-medium" for="enlaceCompartir">🔗 Enlace para compartir esta
+                                tabla</label>
+                            <input id="enlaceCompartir" type="text" class="form-control" :value="enlaceCompartir"
+                                readonly>
+                        </div>
+                        <div class="col-md-3 d-grid">
+                            <button type="button" class="btn btn-outline-primary" @click="copiarEnlaceCompartir">
+                                <i class="bi bi-link-45deg me-1"></i>{{ textoBotonCopiar }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-custom">
+                <div class="card-body p-3 p-lg-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
+                        <h4 class="fw-semibold"><i class="bi bi-table me-2"></i>Detalle mes a mes</h4>
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Tamaño de tabla">
+                            <button type="button" class="btn btn-outline-secondary" @click="disminuirFuenteTabla">
+                                <i class="bi bi-dash-square me-1"></i>A-
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" @click="aumentarFuenteTabla">
+                                <i class="bi bi-plus-square me-1"></i>A+
+                            </button>
+                        </div>
+                    </div>
+                    <div v-if="!formularioPrincipalValido" class="alert alert-warning mb-0" role="alert">
+                        es necesario cumplimentar los campos del formulario.
+                    </div>
+                    <template v-else>
+                        <div class="small text-secondary mb-2">
+                            {{ sweetMes() -1 }} mes{{ sweetMes() - 1 === 1 ? '' : 'es' }} hasta saldar la deuda. <br>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="table table-bordered mb-0 align-middle"
+                                :style="{ fontSize: tableFontSize + 'em' }">
+                                <thead>
+                                    <tr>
+                                        <th rowspan="2" style="background:#c1d6f0;">Mes</th>
+                                        <th colspan="5" style="background:#b8d1f0;">💰 DINERO (€)</th>
+                                        <th colspan="4" style="background:#f8dfb5;"> ⋆ PUNTOS</th>
+                                    </tr>
+                                    <tr>
+                                        <th style="background:#dae8fc;">Saldo inicial</th>
+                                        <th style="background:#dae8fc;">Pago mensual (editable)</th>
+                                        <th style="background:#dae8fc;">Movimiento real</th>
+                                        <th style="background:#dae8fc;">Pago acum.</th>
+                                        <th style="background:#dae8fc;">Saldo cuenta</th>
+                                        <th style="background:#ffefcf;">Puntos inicial</th>
+                                        <th style="background:#ffefcf;">Generados (saldo cuenta)</th>
+                                        <th style="background:#ffefcf;">⋆ Donados extra</th>
+                                        <th style="background:#ffefcf;">Puntos final</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaBody">
+                                    <tr v-for="row in filasMostradas" :key="row.mes">
+                                        <td class="valor-calculado">{{ row.mes }}</td>
+                                        <td
+                                            :class="['valor-calculado', { 'valor-negativo-dinero': row.saldoInicial < 0 }]">
+                                            {{
+                                            row.saldoInicial.toFixed(2) }} €</td>
+                                        <td :class="row.mes === 0 ? 'valor-calculado' : 'celda-editable'">
+                                            <template v-if="row.mes === 0">—</template>
+                                            <template v-else>
+                                                <div class="d-flex align-items-center justify-content-end gap-1">
+                                                    <button v-if="row.saldoInicial > 0" type="button"
+                                                        class="btn btn-outline-secondary btn-sm py-0 px-1"
+                                                        title="Poner a 0 este pago mensual y los posteriores"
+                                                        aria-label="Poner a cero desde este mes"
+                                                        @click="ponerPagoDesdeMesACeroGradual(row.mes)">
+                                                        0<i class="bi bi-arrow-down-short"></i>
+                                                    </button>
+                                                    <button type="button"
+                                                        class="btn btn-outline-secondary btn-sm py-0 px-1"
+                                                        title="Propagar este pago mensual a los posteriores"
+                                                        aria-label="Propagar pago desde este mes"
+                                                        @click="propagarPagoDesdeMesGradual(row.mes, row.pagoMensual)">
+                                                        <i class="bi bi-arrow-down-short"></i>
+                                                    </button>
+                                                    <input type="number" class="tabla-input" v-model.number="row.pagoMensual"
+                                                        min="0" step="50" @input="recalcularCompleto"> €
+                                                </div>
+                                            </template>
+                                        </td>
+                                        <td class="valor-calculado">{{ (row.movimientoReal >= 0 ? '+' : '-') +
+                                            Math.abs(row.movimientoReal).toFixed(2) + ' €' }}</td>
+                                        <td class="valor-calculado">{{ row.pagoAcum.toFixed(2) }} €</td>
+                                        <td
+                                            :class="['valor-calculado', { 'valor-negativo-dinero': row.saldoCuenta < 0 }]">
+                                            {{
+                                            row.saldoCuenta.toFixed(2) }} €</td>
+                                        <td
+                                            :class="['valor-calculado', { 'valor-negativo-puntos': row.puntosInicial < 0 }]">
+                                            {{
+                                            row.puntosInicial.toFixed(2) }} ★</td>
+                                        <td
+                                            :class="['valor-calculado', { 'valor-negativo-puntos': row.puntosGenerados < 0 }]">
+                                            {{ row.puntosGenerados.toFixed(2) }} ★</td>
+                                        <td :class="row.mes === 0 ? 'valor-calculado' : 'celda-editable'">
+                                            <template v-if="row.mes === 0">—</template>
+                                            <template v-else><input type="number" class="tabla-input"
+                                                    v-model.number="row.puntosDonados" min="0" step="10"
+                                                    @input="recalcularCompleto"> ★</template>
+                                        </td>
+                                        <td
+                                            :class="['valor-calculado', { 'valor-negativo-puntos': row.puntosFinal < 0 }]">
+                                            {{
+                                            row.puntosFinal.toFixed(2) }} ★</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-3 d-flex justify-content-between">
+                            <span><i class="bi bi-info-circle me-1"></i> * Solo se edita pago mensual y puntos donados
+                                extra; el
+                                resto se calcula automáticamente.</span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script>
+        const { createApp, ref, reactive, computed, onMounted, nextTick } = Vue;
+
+        createApp({
+            setup() {
+                const data = ref([]);
+                const capitalTotal = ref(1000);
+                const entregaMensualTotal = ref(100);
+                const puntosInicialesExtra = ref(0);
+                const tableFontSize = ref(0.7);
+                const encodedState = ref('');
+                const textoBotonCopiar = ref('Copiar enlace');
+                const MAX_MESES_SIMULACION = 120;
+                const STORAGE_KEY = 'calculadora_jak_estado_v1';
+                let timerRecalculoFormulario = null;
+                let timerBotonCopiar = null;
+                let timerPagosACero = null;
+
+                const sweetState = reactive({
+                    mesesTexto: '—',
+                    borderClass: 'border-info'
+                });
+
+                function sweetMes() {
+                    for (let i = 0; i < data.value.length; i++) {
+                        if (data.value[i].saldoFinal >= -0.01 && data.value[i].puntosFinal >= -0.01) return i + 1;
+                    }
+                    return Math.min(data.value.length + 1, MAX_MESES_SIMULACION + 1);
+                }
+
+                function calcularResumenFormulario(capitalBase, pagoMensualBase, puntosExtraBase = 0) {
+                    if (!Number.isFinite(capitalBase) || capitalBase <= 0) {
+                        return { totalMeses: null, mesesPrestamo: null, mesesAhorroPuntos: null, aporteNecesario: null };
+                    }
+                    if (!Number.isFinite(pagoMensualBase) || pagoMensualBase <= 0) {
+                        return { totalMeses: null, mesesPrestamo: null, mesesAhorroPuntos: null, aporteNecesario: null };
+                    }
+
+                    const puntosIniciales = Number.isFinite(puntosExtraBase) && puntosExtraBase >= 0 ? puntosExtraBase : 0;
+
+                    // Escenario A: desglose con el aporte inicial actualmente introducido
+                    let saldoA = -capitalBase;
+                    let puntosA = saldoA + puntosIniciales;
+                    let mesesPrestamoActual = 0;
+                    let totalMeses = 0;
+
+                    if (!(saldoA >= -0.01 && puntosA >= -0.01)) {
+                        // Primero calcular meses hasta saldar deuda económica
+                        while (mesesPrestamoActual < MAX_MESES_SIMULACION && saldoA < -0.01) {
+                            mesesPrestamoActual++;
+                            saldoA += pagoMensualBase;
+                            puntosA += saldoA;
+                        }
+                        if (saldoA < -0.01) {
+                            return { totalMeses: null, mesesPrestamo: null, mesesAhorroPuntos: null, aporteNecesario: null };
+                        }
+
+                        totalMeses = mesesPrestamoActual;
+
+                        // Continuar hasta que puntos >= 0
+                        while (totalMeses < MAX_MESES_SIMULACION && puntosA < -0.01) {
+                            totalMeses++;
+                            saldoA += pagoMensualBase;
+                            puntosA += saldoA;
+                        }
+                        if (puntosA < -0.01) {
+                            return { totalMeses: null, mesesPrestamo: mesesPrestamoActual, mesesAhorroPuntos: null, aporteNecesario: null };
+                        }
+                    }
+
+                    const mesesAhorroPuntosActual = totalMeses - mesesPrestamoActual;
+
+                    // Escenario B: sin aporte inicial, para estimar aporte necesario y desglose m/x
+                    let saldoB = -capitalBase;
+                    let puntosB = saldoB;
+                    let mesesPrestamo = 0;
+
+                    while (mesesPrestamo < MAX_MESES_SIMULACION && saldoB < -0.01) {
+                        mesesPrestamo++;
+                        saldoB += pagoMensualBase;
+                        puntosB += saldoB;
+                    }
+                    if (saldoB < -0.01) {
+                        return { totalMeses, mesesPrestamo: null, mesesAhorroPuntos: null, aporteNecesario: null };
+                    }
+
+                    const aporteNecesario = Math.max(0, -puntosB);
+
+                    // Calcular meses para ahorro de puntos (sin aporte inicial)
+                    let mesesTotalSinAporte = mesesPrestamo;
+                    while (mesesTotalSinAporte < MAX_MESES_SIMULACION && puntosB < -0.01) {
+                        mesesTotalSinAporte++;
+                        saldoB += pagoMensualBase;
+                        puntosB += saldoB;
+                    }
+
+                    if (puntosB < -0.01) {
+                        return { totalMeses, mesesPrestamo, mesesAhorroPuntos: null, aporteNecesario };
+                    }
+
+                    return {
+                        totalMeses,
+                        mesesPrestamo: mesesPrestamoActual,
+                        mesesAhorroPuntos: mesesAhorroPuntosActual,
+                        aporteNecesario
+                    };
+                }
+
+                const resumenFormulario = computed(() => {
+                    return calcularResumenFormulario(
+                        Number(capitalTotal.value),
+                        Number(entregaMensualTotal.value),
+                        Number(puntosInicialesExtra.value)
+                    );
+                });
+
+                const sweetMesTexto = computed(() => {
+                    const s = resumenFormulario.value.totalMeses;
+                    if (s == null) return `> ${MAX_MESES_SIMULACION} (no amortizado)`;
+                    return `${s} mes${s === 1 ? '' : 'es'}`;
+                });
+
+                const aporteInicialRecomendado = computed(() => resumenFormulario.value.aporteNecesario);
+                const mesesAporteRecomendado = computed(() => resumenFormulario.value.mesesPrestamo);
+                const mesesPrestamo = computed(() => resumenFormulario.value.mesesPrestamo == null ? '—' : resumenFormulario.value.mesesPrestamo);
+                const mesesAhorroPuntos = computed(() => resumenFormulario.value.mesesAhorroPuntos == null ? '—' : resumenFormulario.value.mesesAhorroPuntos);
+                const formularioPrincipalValido = computed(() => {
+                    return Number.isFinite(Number(capitalTotal.value))
+                        && Number(capitalTotal.value) > 0
+                        && Number.isFinite(Number(entregaMensualTotal.value))
+                        && Number(entregaMensualTotal.value) > 0;
+                });
+
+                const textoAporteInicial = computed(() => {
+                    const aporte = aporteInicialRecomendado.value == null ? '—' : aporteInicialRecomendado.value.toFixed(0);
+                    const meses = mesesAporteRecomendado.value;
+                    if (meses == null) {
+                        return `Si tu aporte inicial es de ${aporte} ★, no se puede estimar el tiempo con los valores actuales`;
+                    }
+                    return `Si tu aporte inicial es de ${aporte} ★, solo necesitarás ${meses} mes${meses === 1 ? '' : 'es'} para saldar tu deuda`;
+                });
+
+                const filasMostradas = computed(() => {
+                    const cierre = sweetMes();
+                    const totalFilas = cierre <= data.value.length ? cierre : data.value.length;
+                    return data.value.slice(0, totalFilas);
+                });
+
+                const enlaceCompartir = computed(() => {
+                    const url = new URL(window.location.href);
+                    if (encodedState.value) {
+                        url.searchParams.set('d', encodedState.value);
+                    } else {
+                        url.searchParams.delete('d');
+                    }
+                    return url.toString();
+                });
+
+                function limpiarNumero(valor, fallback = 0) {
+                    const numero = Number(valor);
+                    return Number.isFinite(numero) ? numero : fallback;
+                }
+
+                function codificarEstado(payload) {
+                    const json = JSON.stringify(payload);
+                    const base64 = btoa(unescape(encodeURIComponent(json)));
+                    return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+                }
+
+                function decodificarEstado(cadena) {
+                    try {
+                        const base64 = cadena.replace(/-/g, '+').replace(/_/g, '/');
+                        const padLen = (4 - (base64.length % 4)) % 4;
+                        const padded = base64 + '='.repeat(padLen);
+                        const json = decodeURIComponent(escape(atob(padded)));
+                        return JSON.parse(json);
+                    } catch (error) {
+                        return null;
+                    }
+                }
+
+                function construirPayloadCompartir() {
+                    return {
+                        v: 1,
+                        c: limpiarNumero(capitalTotal.value, 1000),
+                        e: limpiarNumero(entregaMensualTotal.value, 100),
+                        pi: Math.max(0, limpiarNumero(puntosInicialesExtra.value, 0)),
+                        fs: limpiarNumero(tableFontSize.value, 0.7),
+                        rows: data.value
+                            .filter(row => row.mes >= 1)
+                            .map(row => ({
+                                p: Math.max(0, limpiarNumero(row.pagoMensual, 0)),
+                                d: Math.max(0, limpiarNumero(row.puntosDonados, 0))
+                            }))
+                    };
+                }
+
+                function actualizarQueryCompartir() {
+                    if (!formularioValidoParaRecalcular()) return;
+                    const payload = construirPayloadCompartir();
+                    const codificado = codificarEstado(payload);
+                    encodedState.value = codificado;
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('d', codificado);
+                    window.history.replaceState(null, '', url);
+                    try {
+                        localStorage.setItem(STORAGE_KEY, codificado);
+                    } catch (error) {
+                    }
+                }
+
+                function cargarEstadoDesdeCodificado(encoded) {
+                    if (!encoded) return false;
+                    const payload = decodificarEstado(encoded);
+                    if (!payload || typeof payload !== 'object') return false;
+
+                    capitalTotal.value = Math.max(1, limpiarNumero(payload.c, 1000));
+                    entregaMensualTotal.value = Math.max(1, limpiarNumero(payload.e, 100));
+                    puntosInicialesExtra.value = Math.max(0, limpiarNumero(payload.pi, 0));
+                    tableFontSize.value = Math.min(1.2, Math.max(0.55, limpiarNumero(payload.fs, 0.7)));
+
+                    const filas = Array.isArray(payload.rows) ? payload.rows : [];
+                    data.value = [crearFilaBase(0, 0)];
+
+                    if (filas.length) {
+                        for (let i = 0; i < filas.length; i++) {
+                            const fila = filas[i] || {};
+                            const nuevaFila = crearFilaBase(i + 1, Math.max(0, limpiarNumero(fila.p, entregaMensualTotal.value)));
+                            nuevaFila.puntosDonados = Math.max(0, limpiarNumero(fila.d, 0));
+                            data.value.push(nuevaFila);
+                        }
+                    } else {
+                        data.value.push(crearFilaBase(1, Math.max(0, limpiarNumero(entregaMensualTotal.value, 100))));
+                    }
+
+                    recalcularCompleto();
+                    encodedState.value = encoded;
+                    return true;
+                }
+
+                function cargarEstadoDesdeQuery() {
+                    const params = new URLSearchParams(window.location.search);
+                    const encoded = params.get('d');
+                    if (!encoded) return false;
+
+                    if (encoded === 'reset') {
+                        try {
+                            localStorage.removeItem(STORAGE_KEY);
+                        } catch (error) {
+                        }
+                        const url = new URL(window.location.href);
+                        url.searchParams.delete('d');
+                        window.history.replaceState(null, '', url);
+                        return false;
+                    }
+
+                    const cargado = cargarEstadoDesdeCodificado(encoded);
+                    if (cargado) {
+                        try {
+                            localStorage.setItem(STORAGE_KEY, encoded);
+                        } catch (error) {
+                        }
+                    }
+                    return cargado;
+                }
+
+                function cargarEstadoDesdeLocalStorage() {
+                    let encoded = null;
+                    try {
+                        encoded = localStorage.getItem(STORAGE_KEY);
+                    } catch (error) {
+                        return false;
+                    }
+
+                    if (!encoded) return false;
+                    const cargado = cargarEstadoDesdeCodificado(encoded);
+                    if (!cargado) return false;
+
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('d', encoded);
+                    window.history.replaceState(null, '', url);
+                    return true;
+                }
+
+                async function copiarEnlaceCompartir() {
+                    try {
+                        await navigator.clipboard.writeText(enlaceCompartir.value);
+                        textoBotonCopiar.value = 'Copiado';
+                    } catch (error) {
+                        textoBotonCopiar.value = 'No se pudo copiar';
+                    }
+
+                    if (timerBotonCopiar) clearTimeout(timerBotonCopiar);
+                    timerBotonCopiar = setTimeout(() => {
+                        textoBotonCopiar.value = 'Copiar enlace';
+                    }, 1400);
+                }
+
+                function recalcularCompleto() {
+                    if (!data.value.length) return;
+
+                    const capitalBase = Number(capitalTotal.value);
+                    if (!Number.isFinite(capitalBase)) return;
+
+                    let saldoAnterior = 0;
+                    let pagoAcumulado = 0;
+                    let puntosAnterior = 0;
+
+                    for (let i = 0; i < data.value.length; i++) {
+                        const row = data.value[i];
+
+                        if (row.mes === 0) {
+                            row.saldoInicial = 0;
+                            row.pagoMensual = Number.isFinite(Number(row.pagoMensual)) ? Number(row.pagoMensual) : 0;
+                            row.movimientoReal = -capitalBase;
+                            row.saldoFinal = -capitalBase;
+                            row.pagoAcum = 0;
+                            row.saldoCuenta = row.saldoFinal;
+
+                            let puntosDonMes0 = parseFloat(puntosInicialesExtra.value) || 0;
+                            if (puntosDonMes0 < 0) puntosDonMes0 = 0;
+                            row.puntosDonados = puntosDonMes0;
+
+                            row.puntosInicial = 0;
+                            row.puntosGenerados = row.saldoCuenta;
+                            row.puntosFinal = row.puntosInicial + row.puntosGenerados + row.puntosDonados;
+
+                            saldoAnterior = row.saldoFinal;
+                            puntosAnterior = row.puntosFinal;
+                            continue;
+                        }
+
+                        row.saldoInicial = saldoAnterior;
+
+                        let pagoPlan = parseFloat(row.pagoMensual);
+                        if (isNaN(pagoPlan) || pagoPlan < 0) pagoPlan = 0;
+
+                        let puntosDon = parseFloat(row.puntosDonados) || 0;
+                        if (puntosDon < 0) puntosDon = 0;
+                        row.puntosDonados = puntosDon;
+
+                        row.movimientoReal = pagoPlan;
+
+                        const saldoFinal = saldoAnterior + pagoPlan;
+                        row.saldoFinal = saldoFinal;
+
+                        pagoAcumulado += pagoPlan;
+                        row.pagoAcum = pagoAcumulado;
+                        row.saldoCuenta = saldoFinal;
+
+                        row.puntosInicial = puntosAnterior;
+                        const puntosGen = saldoFinal;
+                        row.puntosGenerados = puntosGen;
+                        row.puntosFinal = puntosAnterior + puntosGen + puntosDon;
+
+                        saldoAnterior = saldoFinal;
+                        puntosAnterior = row.puntosFinal;
+                        row.pagoMensual = pagoPlan;
+                    }
+
+                    let iteraciones = 0;
+                    while (iteraciones < MAX_MESES_SIMULACION) {
+                        const cierre = sweetMes();
+                        if (cierre <= data.value.length) break;
+
+                        const ultimaFila = data.value[data.value.length - 1];
+                        if ((ultimaFila?.mes ?? 0) >= MAX_MESES_SIMULACION) break;
+                        const pagoBaseSiguiente = Math.max(0, parseFloat(ultimaFila?.pagoMensual) || 0);
+
+                        if (pagoBaseSiguiente === 0 && ultimaFila.saldoFinal < 0 && ultimaFila.puntosFinal < 0) break;
+
+                        const ultimoMes = ultimaFila?.mes ?? 0;
+                        const nuevaFila = crearFilaBase(ultimoMes + 1, pagoBaseSiguiente);
+                        nuevaFila.saldoInicial = saldoAnterior;
+                        nuevaFila.movimientoReal = pagoBaseSiguiente;
+                        nuevaFila.saldoFinal = saldoAnterior + pagoBaseSiguiente;
+
+                        pagoAcumulado += pagoBaseSiguiente;
+                        nuevaFila.pagoAcum = pagoAcumulado;
+                        nuevaFila.saldoCuenta = nuevaFila.saldoFinal;
+
+                        nuevaFila.puntosInicial = puntosAnterior;
+                        nuevaFila.puntosGenerados = nuevaFila.saldoFinal;
+                        nuevaFila.puntosFinal = puntosAnterior + nuevaFila.puntosGenerados;
+
+                        saldoAnterior = nuevaFila.saldoFinal;
+                        puntosAnterior = nuevaFila.puntosFinal;
+
+                        data.value.push(nuevaFila);
+                        iteraciones++;
+                    }
+
+                    sweetState.mesesTexto = sweetMesTexto.value;
+                    actualizarQueryCompartir();
+                }
+
+                function toggleGeneracionPuntosMes0() {
+                    recalcularCompleto();
+                }
+
+                function crearFilaBase(mes, pagoMensualBase) {
+                    return {
+                        mes,
+                        saldoInicial: 0,
+                        pagoMensual: pagoMensualBase,
+                        movimientoReal: 0,
+                        saldoFinal: 0,
+                        pagoAcum: 0,
+                        saldoCuenta: 0,
+                        puntosInicial: 0,
+                        puntosGenerados: 0,
+                        puntosDonados: 0,
+                        puntosFinal: 0
+                    };
+                }
+
+                function inicializarData(pagoMensualBase) {
+                    return [crearFilaBase(0, 0), crearFilaBase(1, pagoMensualBase)];
+                }
+
+                function formularioValidoParaRecalcular() {
+                    return Number.isFinite(Number(capitalTotal.value))
+                        && Number(capitalTotal.value) > 0
+                        && Number.isFinite(Number(entregaMensualTotal.value))
+                        && Number(entregaMensualTotal.value) > 0
+                        && Number.isFinite(Number(puntosInicialesExtra.value))
+                        && Number(puntosInicialesExtra.value) >= 0;
+                }
+
+                function resetYCalcular() {
+                    if (!formularioValidoParaRecalcular()) return;
+
+                    data.value = inicializarData(Number(entregaMensualTotal.value));
+                    recalcularCompleto();
+                }
+
+                function programarRecalculoFormulario() {
+                    if (timerRecalculoFormulario) clearTimeout(timerRecalculoFormulario);
+                    timerRecalculoFormulario = setTimeout(() => {
+                        if (!formularioValidoParaRecalcular()) return;
+                        resetYCalcular();
+                    }, 180);
+                }
+
+                function aplicarPagoDesdeMesGradual(mesInicio, valorPago) {
+                    if (!Array.isArray(data.value) || !data.value.length) {
+                        actualizarQueryCompartir();
+                        return;
+                    }
+
+                    const mesInicioNumerico = Number(mesInicio);
+                    if (!Number.isFinite(mesInicioNumerico)) return;
+
+                    let valorNormalizado = Number(valorPago);
+                    if (!Number.isFinite(valorNormalizado) || valorNormalizado < 0) {
+                        valorNormalizado = 0;
+                    }
+
+                    if (timerPagosACero) {
+                        clearInterval(timerPagosACero);
+                        timerPagosACero = null;
+                    }
+
+                    let siguienteMesObjetivo = mesInicioNumerico;
+                    timerPagosACero = setInterval(() => {
+                        if (!Array.isArray(data.value) || !data.value.length) {
+                            clearInterval(timerPagosACero);
+                            timerPagosACero = null;
+                            return;
+                        }
+
+                        let filaActual = null;
+                        for (let i = 0; i < data.value.length; i++) {
+                            const fila = data.value[i];
+                            if (!fila || typeof fila !== 'object') continue;
+
+                            const mesFila = Number(fila.mes);
+                            if (!Number.isFinite(mesFila)) continue;
+                            if (mesFila < siguienteMesObjetivo) continue;
+
+                            filaActual = fila;
+                            break;
+                        }
+
+                        if (!filaActual) {
+                            clearInterval(timerPagosACero);
+                            timerPagosACero = null;
+                            recalcularCompleto();
+                            return;
+                        }
+
+                        const mesFilaActual = Number(filaActual.mes);
+                        if (!Number.isFinite(mesFilaActual)) {
+                            siguienteMesObjetivo++;
+                            return;
+                        }
+
+                        filaActual.pagoMensual = valorNormalizado;
+                        recalcularCompleto();
+
+                        siguienteMesObjetivo = mesFilaActual + 1;
+                    }, 90);
+                }
+
+                function ponerPagoDesdeMesACeroGradual(mesInicio) {
+                    aplicarPagoDesdeMesGradual(mesInicio, 0);
+                }
+
+                function propagarPagoDesdeMesGradual(mesInicio, valorPago) {
+                    aplicarPagoDesdeMesGradual(mesInicio, valorPago);
+                }
+
+                function formatearNumero(valor, decimales = 2) {
+                    const numero = Number(valor);
+                    if (!Number.isFinite(numero)) return '—';
+                    return numero.toFixed(decimales);
+                }
+
+                function disminuirFuenteTabla() {
+                    tableFontSize.value = Math.max(0.55, Number((tableFontSize.value - 0.05).toFixed(2)));
+                    actualizarQueryCompartir();
+                }
+
+                function aumentarFuenteTabla() {
+                    tableFontSize.value = Math.min(1.2, Number((tableFontSize.value + 0.05).toFixed(2)));
+                    actualizarQueryCompartir();
+                }
+
+                if (!cargarEstadoDesdeQuery()) {
+                    if (!cargarEstadoDesdeLocalStorage()) {
+                        resetYCalcular();
+                    }
+                }
+
+                const loading = ref(true);
+
+                onMounted(() => {
+                    setTimeout(() => {
+                        nextTick().then(() => {
+                            loading.value = false;
+                        });
+                    }, 100);
+                });
+
+                return {
+                    capitalTotal,
+                    entregaMensualTotal,
+                    puntosInicialesExtra,
+                    tableFontSize,
+                    enlaceCompartir,
+                    textoBotonCopiar,
+                    textoAporteInicial,
+                    mesesPrestamo,
+                    mesesAhorroPuntos,
+                    sweetState,
+                    sweetMes,
+                    sweetMesTexto,
+                    formularioPrincipalValido,
+                    filasMostradas,
+                    recalcularCompleto,
+                    resetYCalcular,
+                    toggleGeneracionPuntosMes0,
+                    programarRecalculoFormulario,
+                    copiarEnlaceCompartir,
+                    formatearNumero,
+                    disminuirFuenteTabla,
+                    aumentarFuenteTabla,
+                    ponerPagoDesdeMesACeroGradual,
+                    propagarPagoDesdeMesGradual,
+                    loading
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+
+</html>
