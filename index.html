@@ -220,9 +220,7 @@
                                 <div class="sweet-metric-label">Tiempo estimado de devolución</div>
                                 <div class="sweet-metric-value" id="sweetMesesValor">{{ sweetState.mesesTexto }} </div>
                                 <div><i>{{ mesesPrestamo }} meses para devolver el préstamo económico
-                                        <br /> {{ mesesAhorroPuntos }} meses para generar el ahorro necesario para
-                                        devolver
-                                        los puntos</i></div>
+                                        <br /> {{ textoMesesAhorroPuntos }}</i></div>
                             </div>
                         </div>
                     </div>
@@ -485,6 +483,13 @@
                 const mesesAporteRecomendado = computed(() => resumenFormulario.value.mesesPrestamo);
                 const mesesPrestamo = computed(() => resumenFormulario.value.mesesPrestamo == null ? '—' : resumenFormulario.value.mesesPrestamo);
                 const mesesAhorroPuntos = computed(() => resumenFormulario.value.mesesAhorroPuntos == null ? '—' : resumenFormulario.value.mesesAhorroPuntos);
+                const textoMesesAhorroPuntos = computed(() => {
+                    const meses = resumenFormulario.value.mesesAhorroPuntos;
+                    if (meses == null) {
+                        return `Se supera el límite de ${MAX_MESES_SIMULACION} meses para el cálculo`;
+                    }
+                    return `${meses} mes${meses === 1 ? '' : 'es'} para generar el ahorro necesario para devolver los puntos`;
+                });
                 const formularioPrincipalValido = computed(() => {
                     return Number.isFinite(Number(capitalTotal.value))
                         && Number(capitalTotal.value) > 0
@@ -495,7 +500,7 @@
                 const textoAporteInicial = computed(() => {
                     const aporte = aporteInicialRecomendado.value == null ? '—' : aporteInicialRecomendado.value.toFixed(0);
                     const meses = mesesAporteRecomendado.value;
-                    if (meses == null) {
+                    if (meses == null || aporteInicialRecomendado.value == null) {
                         return `No se puede estimar el tiempo con los valores actuales`;
                     }
                     return `Si tu aporte inicial es de ${aporte} ★, solo necesitarás ${meses} mes${meses === 1 ? '' : 'es'} para saldar tu deuda`;
@@ -928,6 +933,7 @@
                     textoAporteInicial,
                     mesesPrestamo,
                     mesesAhorroPuntos,
+                    textoMesesAhorroPuntos,
                     sweetState,
                     sweetMes,
                     sweetMesTexto,
