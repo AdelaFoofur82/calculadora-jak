@@ -265,7 +265,7 @@
                     </div>
                     <template v-else>
                         <div class="small text-secondary mb-2">
-                            {{ sweetMes() -1 }} mes{{ sweetMes() - 1 === 1 ? '' : 'es' }} hasta saldar la deuda. <br>
+                            {{ textoSaldarDeudaTabla }} <br>
                         </div>
                         <div class="table-wrapper">
                             <table class="table table-bordered mb-0 align-middle"
@@ -496,7 +496,7 @@
                     const aporte = aporteInicialRecomendado.value == null ? '—' : aporteInicialRecomendado.value.toFixed(0);
                     const meses = mesesAporteRecomendado.value;
                     if (meses == null) {
-                        return `Si tu aporte inicial es de ${aporte} ★, no se puede estimar el tiempo con los valores actuales`;
+                        return `No se puede estimar el tiempo con los valores actuales`;
                     }
                     return `Si tu aporte inicial es de ${aporte} ★, solo necesitarás ${meses} mes${meses === 1 ? '' : 'es'} para saldar tu deuda`;
                 });
@@ -505,6 +505,21 @@
                     const cierre = sweetMes();
                     const totalFilas = cierre <= data.value.length ? cierre : data.value.length;
                     return data.value.slice(0, totalFilas);
+                });
+
+                const textoSaldarDeudaTabla = computed(() => {
+                    const indiceCierre = data.value.findIndex((fila) => fila.saldoFinal >= -0.01 && fila.puntosFinal >= -0.01);
+                    if (indiceCierre !== -1) {
+                        const meses = data.value[indiceCierre].mes;
+                        return `${meses} mes${meses === 1 ? '' : 'es'} hasta saldar la deuda.`;
+                    }
+
+                    const ultimoMes = data.value[data.value.length - 1]?.mes ?? 0;
+                    if (ultimoMes >= MAX_MESES_SIMULACION) {
+                        return `El cálculo supera los ${MAX_MESES_SIMULACION} meses de simulación.`;
+                    }
+
+                    return `No se puede estimar el tiempo con los valores actuales.`;
                 });
 
                 const enlaceCompartir = computed(() => {
